@@ -24,6 +24,8 @@ release/
 *.pdf
 *.csv
 *.txt
+!docs/*.pdf
+!docs/*.csv
 !requirements.txt
 !requirements-lock.txt
 !requirements-deploy.txt

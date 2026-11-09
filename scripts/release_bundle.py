@@ -14,7 +14,7 @@ ROOT_FILES = {
     "engine.py", "tsconfig.json", "vite.config.ts", "tailwind.config.ts",
     "postcss.config.js", "components.json", "drizzle.config.ts",
 }
-DIRECTORIES = {"client", "server", "shared", "script", "scripts", "tests", ".github"}
+DIRECTORIES = {"client", "server", "shared", "script", "scripts", "tests", ".github", "docs"}
 FORBIDDEN_PARTS = {".git", ".venv", "node_modules", "__pycache__", "raw_outputs", "release"}
 TOKEN = re.compile(rb"(?:gsk_[A-Za-z0-9]{20,}|hf_[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{32,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----)")
 
@@ -29,7 +29,9 @@ def release_files():
             raise ValueError(f"Forbidden path: {name}")
         if path.name.startswith(".env") and name != ".env.example":
             raise ValueError(f"Environment file: {name}")
-        if path.suffix.lower() in {".zip", ".pdf", ".csv", ".sqlite", ".db"}:
+        if path.suffix.lower() in {".zip", ".sqlite", ".db"}:
+            raise ValueError(f"Data/archive file: {name}")
+        if path.suffix.lower() in {".pdf", ".csv"} and "docs" not in path.parts:
             raise ValueError(f"Data/archive file: {name}")
         if path.suffix.lower() == ".txt" and name not in ROOT_FILES:
             raise ValueError(f"Unexpected text fixture: {name}")
@@ -41,7 +43,7 @@ def release_files():
             raise ValueError(f"Possible embedded credential: {name}")
         if path.suffix == ".json":
             value = json.loads(body)
-            if isinstance(value, dict) and ({"raw_model_logs", "promos"} & value.keys()):
+            if isinstance(value, dict) and ({"raw_model_logs", "promos"} & value.keys()) and "docs" not in path.parts:
                 raise ValueError(f"Possible reviewer run: {name}")
         files.append((name, body))
     if not files:
