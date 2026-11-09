@@ -22,18 +22,18 @@ export async function registerRoutes(
     const ip = req.ip || "unknown";
     const previous=attempts.get(ip);
     const bucket=previous && Date.now()-previous.since<1_800_000?previous:{since:Date.now(),count:0};
-    if(bucket.count>=20)return res.status(429).json({error:"Prototype limit: 20 runs per 30 minutes. Use the local app for larger tests."});
+    if(bucket.count>=50)return res.status(429).json({error:"Prototype limit reached. Please try again in a few minutes."});
     bucket.count++;attempts.set(ip,bucket);
-    if (running >= 2) return res.status(429).json({error:"Two runs are active. Please try again shortly."});
+    if (running >= 5) return res.status(429).json({error:"Server busy with multiple active analyses. Please wait a moment."});
     if (!Array.isArray(req.body.files) || !req.body.files.length) return res.status(400).json({error:"Upload screenplay files first."});
     if (!["platform","groq"].includes(req.body.provider || "platform")) return res.status(400).json({error:"Unknown provider."});
     running++;
     const worker=spawn("python", [path.join(process.cwd(),"engine.py")], {stdio:["pipe","pipe","pipe"]});
     let output="", closed=false;
-    const finish=()=>{ if(!closed){closed=true;running--;clearTimeout(timer);} };
-    const timer=setTimeout(()=>{worker.kill();finish();if(!res.headersSent)res.status(504).json({error:"Run exceeded ten minutes. Free-tier quotas may require a smaller pack or a later retry."});},600000);
-    worker.stdout.on("data",(d)=>{output+=d.toString();if(output.length>12_000_000)worker.kill();});
-    worker.stderr.on("data",()=>{}); // Do not persist source-containing exception payloads.
+    const finish=()=>{ if(!closed){closed=true;running=Math.max(0, running - 1);clearTimeout(timer);} };
+    const timer=setTimeout(()=>{try{worker.kill("SIGKILL");}catch{}finish();if(!res.headersSent)res.status(504).json({error:"Run exceeded timeout limit. For full-pack audits, use the pre-computed audit loader."});},180000);
+    worker.stdout.on("data",(d)=>{output+=d.toString();if(output.length>12_000_000){try{worker.kill("SIGKILL");}catch{}finish();}});
+    worker.stderr.on("data",()=>{});
     worker.on("error",()=>{finish();if(!res.headersSent)res.status(500).json({error:"Analysis worker could not start."});});
     worker.on("close",(code)=>{
       finish();
@@ -41,8 +41,13 @@ export async function registerRoutes(
       try{const body=JSON.parse(output);res.status(code===0?200:400).json(body);}
       catch{res.status(500).json({error:"Analysis worker returned an invalid response."});}
     });
-    res.on("close",()=>{if(!res.writableEnded){worker.kill();finish();}});
-    worker.stdin.end(JSON.stringify(req.body));
+    res.on("close",()=>{try{worker.kill("SIGKILL");}catch{}finish();});
+    try {
+      worker.stdin.end(JSON.stringify(req.body));
+    } catch {
+      finish();
+      if(!res.headersSent)res.status(500).json({error:"Failed to send input to worker."});
+    }
   });
 
   return httpServer;
