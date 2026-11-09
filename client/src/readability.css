@@ -1,0 +1,22 @@
+/* Compact metadata remains legible on laptop and mobile displays. */
+.studio-label,.nav-caption{color:#91aa9a}
+.nav-item{font-size:12px}
+.sidebar-bottom p{color:#9fb2a3}
+.sidebar-bottom strong{font-size:12px}
+.heading-row p,.section-top p,.promo-card p,.story-point p,.rationale p,.stitch-note p,.muted{color:#73816b}
+.eyebrow,.source-title,.overline,.evidence-ids,.detail-heading .eyebrow{font-size:9px}
+.filters input,.filters select,.detail-tabs button,.run-strip>div,.run-strip strong{font-size:11px}
+.metrics span{font-size:11px}
+.metrics small,.card-bottom .badge,.audience-mini,.badge,.duration{font-size:10px}
+.promo-card h3{font-size:15px}
+.promo-card p,.rationale p,.stitch-note p,.review-flags>div{font-size:11px}
+.review-footer>label,.review-footer>div>span{font-size:9px}
+.review-footer textarea{font-size:11px}
+.source-events strong,.source-events span,.source-events small{font-size:9px}
+.source-events p{font-size:11px}
+.registry-grid h3{font-size:12px}
+.registry-grid p,.registry-grid small,.registry-grid select{font-size:10px}
+.coverage,.usage-table strong,.usage-table>span{font-size:11px}
+.page-footer{color:#829077}
+@media(max-width:850px) and (min-width:541px){.nav-item{font-size:0}}
+@media(max-width:540px){.nav-item{font-size:0}.heading-row h1{font-size:26px}.heading-row p,.filters select{font-size:10px}.metrics span{font-size:10px}.metrics small{font-size:9px}.detail-tabs button{font-size:10px}.evidence-ids{font-size:9px}.overline{font-size:8px}.run-strip>div{font-size:10px}.promo-card p{font-size:11px}.version{display:none}}

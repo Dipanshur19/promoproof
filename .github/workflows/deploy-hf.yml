@@ -1,0 +1,28 @@
+name: Manually deploy to private Hugging Face Space
+on:
+  workflow_dispatch:
+    inputs:
+      space_id:
+        description: "Existing private Docker Space: OWNER/SPACE"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: deploy-hugging-face
+  cancel-in-progress: false
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    environment: huggingface
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements-deploy.txt
+      - name: Upload reviewed source only
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SPACE_ID: ${{ inputs.space_id }}
+        run: python scripts/push_space.py "$SPACE_ID"
